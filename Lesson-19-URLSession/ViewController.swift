@@ -39,7 +39,7 @@ class ViewController: UIViewController {
         URLSession.shared.dataTask(with: request) { data, response, error in
             
             if let responseError = error {
-                debugPrint(error?.localizedDescription)
+                debugPrint(responseError.localizedDescription)
             } else {
                 debugPrint("")
                 
@@ -52,6 +52,9 @@ class ViewController: UIViewController {
                     
                     let currentPage: Int = result["page"] as? Int ?? 0
                     let data: [[String : Any]] = result["data"] as? [[String : Any]] ?? []
+                    
+                    print(currentPage)
+                    print(data)
                     
                     debugPrint(result)
                 } catch (let parseError) {
@@ -76,7 +79,7 @@ class ViewController: UIViewController {
         URLSession.shared.dataTask(with: request) { data, response, error in
             
             if let responseError = error {
-                debugPrint(error?.localizedDescription)
+                debugPrint(responseError.localizedDescription)
             } else {
                 debugPrint("")
                 
@@ -103,14 +106,15 @@ class ViewController: UIViewController {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         
-        //let params = CreateUserParams(page: 1, users: "")
+        let params = CreateUserParams(name: "Bob", job: "Job")
+        let paramData = try! JSONEncoder().encode(params)
         
-        //request(request, &UsersListResponse)
+        request.httpBody = paramData
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             
             if let responseError = error {
-                debugPrint(error?.localizedDescription)
+                debugPrint(responseError.localizedDescription)
             } else {
                 debugPrint("")
                 
@@ -118,7 +122,7 @@ class ViewController: UIViewController {
                 
                 //сучасний варіант
                 do {
-                    let result = try JSONDecoder().decode(UsersListResponse.self, from: responseData)
+                    let result = try JSONDecoder().decode(CreateUserResponse.self, from: responseData)
                     debugPrint(result)
                 } catch (let parseError) {
                     debugPrint(parseError.localizedDescription)
@@ -127,12 +131,13 @@ class ViewController: UIViewController {
         }.resume()
     }
     
+    /*
     func request<T: Decodable>(request: URLRequest, type: T) {
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             
             if let responseError = error {
-                debugPrint(error?.localizedDescription)
+                debugPrint(responseError.localizedDescription)
             } else {
                 debugPrint("")
                 
@@ -148,6 +153,8 @@ class ViewController: UIViewController {
             }
         }.resume()
     }
+     */
+    
 }
 
 //сучасний підхід
@@ -220,12 +227,34 @@ struct UsersListResponse: Decodable {
 
 struct CreateUserParams: Codable {
     
-    let page: Int
-    let users: [CreateUserData]
-
-    struct CreateUserData: Codable {
-        
-        let id: Int
-        let email: String
-    }
+    let name: String
+    let job: String
 }
+
+struct CreateUserResponse: Decodable {
+    
+    let name: String?
+    let job: String?
+    let id: String
+    let createdAt: String
+}
+
+/*
+ Request
+ /api/users
+
+ {
+     "name": "morpheus",
+     "job": "leader"
+ }
+  
+ Response
+ 201
+
+ {
+     "name": "morpheus",
+     "job": "leader",
+     "id": "397",
+     "createdAt": "2024-04-24T12:31:35.099Z"
+ }
+ */
